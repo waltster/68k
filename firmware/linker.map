@@ -1,0 +1,59 @@
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+startup          0x0000000000000000 0x0000000000000400 xr
+rom              0x0000000000000400 0x000000000007fc00 xr
+ram              0x0000000000080000 0x0000000000020000 xrw
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+                0x00000000000a0000                PROVIDE (__stack, 0xa0000)
+                0x0000000000000000                . = 0x0
+
+.vectors        0x0000000000000000      0x400
+ *(.vectors)
+ .vectors       0x0000000000000000      0x400 src/vectors.o
+                0x0000000000000000                _vectors
+                0x0000000000000400                . = 0x400
+
+.text           0x0000000000000400       0x14
+ *(.text)
+ .text          0x0000000000000400        0x0 src/vectors.o
+ .text          0x0000000000000400       0x14 src/startup.o
+                0x0000000000000400                __start
+                0x0000000000000406                vector_fatal
+
+.rodata
+ *(.rodata)
+                0x0000000000000414                . = ALIGN (0x4)
+                0x0000000000000414                _rom_end = .
+                0x0000000000080000                . = 0x80000
+
+.data           0x0000000000080000        0x0
+                0x0000000000080000                _data_start = .
+ *(.data)
+ .data          0x0000000000080000        0x0 src/vectors.o
+ .data          0x0000000000080000        0x0 src/startup.o
+                0x0000000000080000                . = ALIGN (0x4)
+                0x0000000000080000                _data_end = .
+                0x0000000000000000                _data_size = SIZEOF (.data)
+
+.bss            0x0000000000080000        0x0
+                0x0000000000080000                _bss_start = .
+ *(.bss)
+ .bss           0x0000000000080000        0x0 src/vectors.o
+ .bss           0x0000000000080000        0x0 src/startup.o
+                0x0000000000080000                . = ALIGN (0x4)
+                0x0000000000080000                _bss_end = .
+                0x0000000000000000                _bss_size = SIZEOF (.bss)
+                0x0000000000080000                . = ALIGN (0x4)
+                0x0000000000080000                _ram_end = .
+LOAD src/vectors.o
+LOAD src/startup.o
+OUTPUT(firmware.elf elf32-m68k)
+
+.comment        0x0000000000000000       0x11
+ .comment       0x0000000000000000       0x11 src/vectors.o
+                                         0x12 (size before relaxing)
